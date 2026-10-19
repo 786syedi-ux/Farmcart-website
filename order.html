@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Place Order — Farmcart</title>
+<script src="config.js"></script>
 <script src="products.js"></script>
 <style>
   :root{
@@ -107,13 +108,17 @@
     <div class="validation bad" id="validationMsg">Add at least 200 kg total to check out.</div>
 
     <div class="deliveryform">
-      <div><label>Business Name</label><input type="text" placeholder="e.g. Spice Route Kitchen"></div>
-      <div><label>Contact Phone</label><input type="tel" placeholder="+91"></div>
-      <div><label>Delivery Address</label><textarea rows="2" placeholder="Kitchen / dock address"></textarea></div>
-      <div><label>Notes (optional)</label><textarea rows="2" placeholder="Gate code, delivery instructions..."></textarea></div>
+      <div><label>Business Name *</label><input type="text" id="cBusiness" placeholder="e.g. Spice Route Kitchen" autocomplete="organization"></div>
+      <div><label>Contact Person *</label><input type="text" id="cPerson" placeholder="Name of person receiving the delivery" autocomplete="name"></div>
+      <div><label>Mobile / WhatsApp Number *</label><input type="tel" id="cPhone" placeholder="10-digit mobile number" autocomplete="tel"></div>
+      <div><label>Delivery Address *</label><textarea rows="2" id="cAddress" placeholder="Kitchen / dock address with landmark"></textarea></div>
+      <div><label>Notes (optional)</label><textarea rows="2" id="cNotes" placeholder="Gate code, delivery instructions..."></textarea></div>
+      <div class="mono" id="deliveryDate" style="font-size:0.8rem;font-weight:700;color:var(--leaf);"></div>
     </div>
 
-    <button class="checkoutbtn" id="checkoutBtn" disabled onclick="window.location.href='payment.html'">Proceed to Payment</button>
+    <div class="validation bad" id="formErr" style="display:none;"></div>
+    <button class="checkoutbtn" id="checkoutBtn" disabled onclick="sendOrder()">Send Order on WhatsApp</button>
+    <p style="font-size:0.76rem;opacity:0.65;line-height:1.5;margin:12px 0 0;">This opens WhatsApp with your order filled in. <b>Press Send in WhatsApp</b> to place it. We'll confirm and share payment details there.</p>
   </div>
 </div>
 
@@ -192,6 +197,68 @@ function calc(){
     btn.disabled = false;
   }
 }
+
+// ---------- WhatsApp ordering ----------
+function nextDeliveryDate(){
+  const now = new Date();
+  const d = new Date(now);
+  d.setDate(d.getDate() + (now.getHours() >= 22 ? 2 : 1));   // after 10 PM goes to the next cycle
+  return d;
+}
+function fmtDate(d){
+  return d.toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'short'});
+}
+function buildOrderMessage(d){
+  const lines = d.items.map(i => `• ${i.name} – ${i.qty} kg × ₹${i.price} = ₹${(i.qty*i.price).toLocaleString('en-IN')}`);
+  return [
+    '*New Farmcart order*',
+    '',
+    ...lines,
+    '',
+    `Total weight: ${d.weight} kg`,
+    `Items subtotal: ₹${d.subtotal.toLocaleString('en-IN')}`,
+    `Delivery (flat): ₹${d.delivery}`,
+    `*Total: ₹${(d.subtotal + d.delivery).toLocaleString('en-IN')}*`,
+    '',
+    `*Business:* ${d.business}`,
+    `*Contact person:* ${d.person}`,
+    `*Phone:* ${d.phone}`,
+    `*Delivery address:* ${d.address}`,
+    `*Requested delivery:* ${d.date} (before kitchen opens)`,
+    d.notes ? `*Notes:* ${d.notes}` : null,
+  ].filter(x => x !== null).join('\n');
+}
+function showFormErr(msg){
+  const el = document.getElementById('formErr');
+  el.textContent = msg; el.style.display = 'block';
+}
+function sendOrder(){
+  document.getElementById('formErr').style.display = 'none';
+  const number = (typeof FARMCART_WHATSAPP === 'string' ? FARMCART_WHATSAPP : '').replace(/\D/g, '');
+  if(!/^\d{11,15}$/.test(number)){
+    showFormErr('Ordering is not switched on yet: the owner still needs to add the WhatsApp number in config.js.');
+    return;
+  }
+  const val = id => document.getElementById(id).value.trim();
+  const business = val('cBusiness'), person = val('cPerson'), phone = val('cPhone'), address = val('cAddress'), notes = val('cNotes');
+  if(!business || !person || !address){ showFormErr('Please fill in business name, contact person and delivery address.'); return; }
+  if(phone.replace(/\D/g,'').length < 10){ showFormErr('Please enter a valid 10-digit mobile number so we can reach you.'); return; }
+
+  const items = [];
+  products.forEach((p,i) => {
+    const qty = parseInt(document.getElementById('qty'+i).value || 0);
+    if(qty > 0) items.push({name:p.name, price:p.price, qty});
+  });
+  const weight = items.reduce((s,i) => s + i.qty, 0);
+  const subtotal = items.reduce((s,i) => s + i.qty*i.price, 0);
+  if(weight < 200 || items.some(i => i.qty < 10)){ showFormErr('Please meet the minimum order rules first.'); return; }
+
+  const msg = buildOrderMessage({items, weight, subtotal, delivery: DELIVERY_FEE, business, person, phone, address, notes, date: fmtDate(nextDeliveryDate())});
+  const url = 'https://wa.me/' + number + '?text=' + encodeURIComponent(msg);
+  const w = window.open(url, '_blank');
+  if(!w) window.location.href = url;
+}
+document.getElementById('deliveryDate').textContent = 'Delivery: ' + fmtDate(nextDeliveryDate()) + (new Date().getHours() >= 22 ? ' (ordered after 10 PM cutoff)' : '');
 </script>
 
 </body>
