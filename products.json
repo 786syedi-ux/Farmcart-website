@@ -58,5 +58,10 @@
     "id": "peas",
     "name": "Green Peas",
     "price": 40
+  },
+  {
+    "id": "beet-root",
+    "name": "Beet Root",
+    "price": 60
   }
 ]
