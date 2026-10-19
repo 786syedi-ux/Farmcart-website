@@ -218,7 +218,6 @@
       <a href="#contact">Contact</a>
     </div>
     <a href="order.html" class="navcta">Place Order</a>
-    <a href="admin.html" class="managelink">Edit Prices</a>
   </div>
 </nav>
 
@@ -302,21 +301,32 @@
     <div class="cratewrap" id="productGrid">
       <div class="loadingrow">Loading today's prices…</div>
     </div>
+    <div style="margin-top:36px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+      <a href="order.html" class="btn-primary">Build your order →</a>
+      <span class="mono" style="font-size:0.85rem;opacity:0.7;">200 kg minimum · order by 10 PM</span>
+    </div>
   </div>
 </section>
 
 <script>
-  loadProducts().then(products => {
+  (function(){
     const grid = document.getElementById('productGrid');
-    grid.innerHTML = products.map(p => `
-      <div class="crate-card">
-        <div class="veg-icon">${getIcon(p.name)}</div>
-        <h4>${p.name}</h4>
-        <div class="price">₹${p.price}<span class="unit">/kg</span></div>
-        <div class="min">MIN 10 KG</div>
-      </div>
-    `).join('');
-  });
+    const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    function render(products){
+      grid.innerHTML = products.map(p => `
+        <div class="crate-card">
+          <div class="veg-icon">${getIcon(p.name)}</div>
+          <h4>${esc(p.name)}</h4>
+          <div class="price">₹${esc(p.price)}<span class="unit">/kg</span></div>
+          <div class="min">MIN 10 KG</div>
+        </div>`).join('');
+    }
+    if (typeof loadProducts !== 'function') {
+      grid.innerHTML = '<div class="loadingrow">Prices are temporarily unavailable. Please <a href="order.html" style="text-decoration:underline">open the order page</a> or message us on WhatsApp.</div>';
+      return;
+    }
+    loadProducts().then(render).catch(() => render(DEFAULT_PRODUCTS));
+  })();
 </script>
 
 <section class="faq" id="faq">

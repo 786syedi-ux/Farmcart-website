@@ -1,0 +1,62 @@
+[
+  {
+    "id": "tomato",
+    "name": "Tomato",
+    "price": 24
+  },
+  {
+    "id": "onion",
+    "name": "Onion",
+    "price": 31
+  },
+  {
+    "id": "potato",
+    "name": "Potato",
+    "price": 22
+  },
+  {
+    "id": "garlic",
+    "name": "Garlic (peeled)",
+    "price": 142
+  },
+  {
+    "id": "ginger",
+    "name": "Ginger",
+    "price": 68
+  },
+  {
+    "id": "cabbage",
+    "name": "Cabbage",
+    "price": 18
+  },
+  {
+    "id": "capsicum",
+    "name": "Green Capsicum",
+    "price": 36
+  },
+  {
+    "id": "chilli",
+    "name": "Green Chilli",
+    "price": 44
+  },
+  {
+    "id": "beans",
+    "name": "French Beans",
+    "price": 38
+  },
+  {
+    "id": "drumstick",
+    "name": "Drumstick",
+    "price": 52
+  },
+  {
+    "id": "gourd",
+    "name": "Bitter Gourd",
+    "price": 46
+  },
+  {
+    "id": "peas",
+    "name": "Green Peas",
+    "price": 40
+  }
+]

@@ -77,7 +77,7 @@
 <nav>
   <div class="navrow">
     <a href="index.html"><div class="logo">Farmcart<span class="dot">.</span></div></a>
-    <div class="navlinks"><a href="index.html">← Back to Home</a> <a href="admin.html" style="margin-left:18px;">Edit Prices</a></div>
+    <div class="navlinks"><a href="index.html">← Back to Home</a></div>
   </div>
 </nav>
 
@@ -120,7 +120,8 @@
 <script>
 let products = [];
 
-loadProducts().then(loaded => {
+(typeof loadProducts === 'function' ? loadProducts() : Promise.resolve([])).then(loaded => {
+  if(!loaded.length){ document.getElementById('productlist').innerHTML = '<p class="mono">Could not load products. Make sure products.js is uploaded next to this page.</p>'; return; }
   products = loaded;
   const listEl = document.getElementById('productlist');
   listEl.innerHTML = '';
