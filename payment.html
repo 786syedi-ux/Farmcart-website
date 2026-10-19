@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment — Farmcart</title>
+<style>
+  :root{
+    --ink:#20241C; --parchment:#F7F1E1; --parchment-2:#EFE6CE;
+    --turmeric:#E2A63B; --turmeric-deep:#C4841E; --crate:#8A5A34; --leaf:#3C5B3E;
+    --line: rgba(32,36,28,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--parchment);color:var(--ink);font-family:'Work Sans',-apple-system,BlinkMacSystemFont,sans-serif;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:Georgia,'Times New Roman',serif;font-weight:800;letter-spacing:-0.01em;margin:0;}
+  .mono{font-family:'Courier New',monospace;}
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 28px;}
+  nav{position:sticky;top:0;z-index:50;background:var(--parchment);border-bottom:1px solid var(--line);}
+  .navrow{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;max-width:980px;margin:0 auto;}
+  .logo{font-family:Georgia,serif;font-weight:800;font-size:1.5rem;}
+  .logo .dot{color:var(--turmeric-deep);}
+  .navlinks a{opacity:0.75;font-weight:600;font-size:0.92rem;}
+
+  .devnote{
+    background:var(--ink);color:var(--parchment);font-size:0.85rem;padding:14px 0;
+  }
+  .devnote .wrap{display:flex;gap:10px;align-items:baseline;}
+  .devnote b{color:var(--turmeric);}
+
+  .pagehead{padding:48px 0 8px;}
+  .pagehead .eyebrow{font-family:'Courier New',monospace;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--crate);margin-bottom:10px;}
+  .pagehead h1{font-size:clamp(1.9rem,4vw,2.5rem);}
+
+  .layout{display:grid;grid-template-columns:1fr 340px;gap:44px;padding:36px 0 100px;align-items:start;}
+  @media(max-width:860px){.layout{grid-template-columns:1fr;}}
+
+  .methods{display:flex;flex-direction:column;gap:14px;}
+  .method{
+    border:2px solid var(--line);border-radius:3px;padding:20px 22px;cursor:pointer;transition:border-color .15s;background:var(--parchment);
+  }
+  .method.active{border-color:var(--ink);background:var(--parchment-2);}
+  .method .mhead{display:flex;align-items:center;justify-content:space-between;}
+  .method h4{font-family:Georgia,serif;font-size:1.02rem;}
+  .radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;}
+  .method.active .radio::after{content:'';width:9px;height:9px;border-radius:50%;background:var(--ink);}
+  .methoddetail{margin-top:16px;display:none;}
+  .method.active .methoddetail{display:block;}
+  .qrbox{width:140px;height:140px;background:repeating-linear-gradient(45deg,var(--ink),var(--ink) 6px,var(--parchment) 6px,var(--parchment) 12px);border:1px solid var(--line);margin:0 auto 10px;opacity:0.85;}
+  .cardfields{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .cardfields input, .fullwidth input{
+    width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:2px;background:var(--parchment);font-family:inherit;font-size:0.9rem;
+  }
+  .cardfields .span2{grid-column:1/-1;}
+  .codnote{font-size:0.85rem;opacity:0.75;line-height:1.5;}
+
+  .summary{position:sticky;top:90px;border:2px solid var(--ink);border-radius:3px;background:var(--parchment-2);padding:26px 24px;}
+  .summary h3{font-size:1.1rem;margin-bottom:18px;}
+  .sumrow{display:flex;justify-content:space-between;font-size:0.92rem;padding:9px 0;border-bottom:1px solid var(--line);}
+  .sumrow.total{font-weight:800;font-size:1.15rem;border-bottom:none;padding-top:14px;}
+  .payBtn{
+    margin-top:22px;width:100%;padding:16px;text-align:center;font-weight:700;font-size:0.98rem;
+    background:var(--turmeric);color:var(--ink);border-radius:2px;border:none;cursor:pointer;
+  }
+  .lockline{margin-top:14px;font-size:0.78rem;opacity:0.6;text-align:center;}
+
+  .successbox{
+    display:none;margin-top:18px;padding:16px;background:rgba(60,91,62,0.14);color:var(--leaf);
+    border-radius:2px;font-weight:700;font-size:0.9rem;text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<div class="devnote"><div class="wrap"><b>Developer note:</b> UI template only — connect a real gateway (Razorpay / PayU / Instamojo are common for Indian B2B) via WooCommerce before going live. "Pay Now" below just simulates success.</div></div>
+
+<nav>
+  <div class="navrow">
+    <a href="index.html"><div class="logo">Farmcart<span class="dot">.</span></div></a>
+    <div class="navlinks"><a href="order.html">← Back to Order</a></div>
+  </div>
+</nav>
+
+<section class="pagehead">
+  <div class="wrap">
+    <div class="eyebrow">Checkout</div>
+    <h1>Choose how to pay</h1>
+  </div>
+</section>
+
+<div class="wrap layout">
+  <div class="methods">
+    <div class="method active" onclick="selectMethod(this)">
+      <div class="mhead"><h4>UPI</h4><div class="radio"></div></div>
+      <div class="methoddetail">
+        <div class="qrbox"></div>
+        <p class="codnote" style="text-align:center;">Scan with any UPI app, or enter your UPI ID below.</p>
+        <div class="fullwidth" style="margin-top:10px;"><input type="text" placeholder="yourname@upi"></div>
+      </div>
+    </div>
+
+    <div class="method" onclick="selectMethod(this)">
+      <div class="mhead"><h4>Credit / Debit Card</h4><div class="radio"></div></div>
+      <div class="methoddetail">
+        <div class="cardfields">
+          <input class="span2" type="text" placeholder="Card number">
+          <input type="text" placeholder="MM / YY">
+          <input type="text" placeholder="CVV">
+          <input class="span2" type="text" placeholder="Name on card">
+        </div>
+      </div>
+    </div>
+
+    <div class="method" onclick="selectMethod(this)">
+      <div class="mhead"><h4>Net Banking</h4><div class="radio"></div></div>
+      <div class="methoddetail">
+        <p class="codnote">You'll be redirected to your bank to complete payment.</p>
+      </div>
+    </div>
+
+    <div class="method" onclick="selectMethod(this)">
+      <div class="mhead"><h4>Cash on Delivery</h4><div class="radio"></div></div>
+      <div class="methoddetail">
+        <p class="codnote">Available without prepayment once you've completed one verified prepaid order. New accounts: please choose UPI, card, or net banking for this order.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary">
+    <h3>Order Summary</h3>
+    <div class="sumrow"><span>Items (example)</span><span class="mono">210 kg</span></div>
+    <div class="sumrow"><span>Subtotal</span><span class="mono">₹5,940</span></div>
+    <div class="sumrow"><span>Delivery (flat)</span><span class="mono">₹400</span></div>
+    <div class="sumrow total"><span>Total</span><span class="mono">₹6,340</span></div>
+    <button class="payBtn" onclick="fakePay()">Pay ₹6,340 Now</button>
+    <div class="lockline">🔒 Payments will be encrypted end-to-end once a live gateway is connected.</div>
+    <div class="successbox" id="successBox">✓ Payment simulated — order confirmed for tomorrow's delivery.</div>
+  </div>
+</div>
+
+<script>
+function selectMethod(el){
+  document.querySelectorAll('.method').forEach(m => m.classList.remove('active'));
+  el.classList.add('active');
+}
+function fakePay(){
+  document.getElementById('successBox').style.display = 'block';
+}
+</script>
+
+</body>
+</html>
